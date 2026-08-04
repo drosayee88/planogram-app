@@ -1,3 +1,29 @@
+// ─── Store themes ─────────────────────────────────────────────────────────────
+
+export type StoreThemeId =
+  | 'generic'
+  | 'walmart'
+  | 'target'
+  | 'costco'
+  | 'homedepot'
+  | 'walgreens';
+
+export interface StoreTheme {
+  id: StoreThemeId;
+  label: string;
+  /** Hex accent used on the picker button */
+  brandColor: string;
+}
+
+export const STORE_THEMES: StoreTheme[] = [
+  { id: 'generic',   label: 'Generic',     brandColor: '#57606a' },
+  { id: 'walmart',   label: 'Walmart',     brandColor: '#0071ce' },
+  { id: 'target',    label: 'Target',      brandColor: '#cc0000' },
+  { id: 'costco',    label: 'Costco',      brandColor: '#005daa' },
+  { id: 'homedepot', label: 'Home Depot',  brandColor: '#f96302' },
+  { id: 'walgreens', label: 'Walgreens',   brandColor: '#e0151f' },
+];
+
 // ─── Core domain types ────────────────────────────────────────────────────────
 
 export interface Product {

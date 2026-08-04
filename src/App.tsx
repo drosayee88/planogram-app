@@ -1,10 +1,11 @@
 import { useReducer, useState, useRef } from 'react';
-import type { PlanogramAction, PlanogramState, Planogram, ShelfLayout } from './types/planogram';
+import type { PlanogramAction, PlanogramState, Planogram, ShelfLayout, StoreThemeId } from './types/planogram';
 import { buildEmptyPlanogram, buildHardcodedPlanogram } from './services/planogramService';
 import { exportToPptx } from './services/exportService';
 import { ProductUploader } from './components/ProductUploader';
 import { LayoutConfigurator } from './components/LayoutConfigurator';
 import { PlanogramCanvas } from './components/PlanogramCanvas';
+import { StoreThemePicker } from './components/StoreThemePicker';
 import { Toolbar } from './components/Toolbar';
 import './App.css';
 
@@ -72,6 +73,50 @@ const DEFAULT_LAYOUT: ShelfLayout = {
   label: 'Main Floor Fixture',
 };
 
+// ── Over-capacity dialog ──────────────────────────────────────────────────────
+
+interface OverCapacityDialogProps {
+  productCount: number;
+  capacity: number;
+  onContinue: () => void;
+  onCancel: () => void;
+}
+
+function OverCapacityDialog({ productCount, capacity, onContinue, onCancel }: OverCapacityDialogProps) {
+  const overflow = productCount - capacity;
+  return (
+    <div className="modal-backdrop" role="presentation" onClick={onCancel}>
+      <div
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="overcapacity-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-header">
+          <span className="modal-icon">⚠</span>
+          <h3 id="overcapacity-title" className="modal-title">Too many products</h3>
+        </div>
+        <p className="modal-body">
+          You have <strong>{productCount} products</strong> but the current layout only
+          has <strong>{capacity} slot{capacity !== 1 ? 's' : ''}</strong> ({overflow} product{overflow !== 1 ? 's' : ''} won't fit).
+          <br /><br />
+          You can <strong>continue anyway</strong> and the first {capacity} products will be placed,
+          or <strong>cancel</strong> and adjust your layout or remove some products.
+        </p>
+        <div className="modal-actions">
+          <button type="button" className="btn btn--secondary" onClick={onCancel}>
+            Cancel
+          </button>
+          <button type="button" className="btn btn--primary" onClick={onContinue}>
+            Continue with {capacity} products
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Confirm-move dialog ───────────────────────────────────────────────────────
 
 interface SlotCoord { shelf: number; slot: number }
@@ -121,19 +166,31 @@ function ConfirmMoveDialog({ from, to, onConfirm, onCancel }: ConfirmMoveDialogP
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [layout, setLayout] = useState<ShelfLayout>(DEFAULT_LAYOUT);
+  const [theme, setTheme] = useState<StoreThemeId>('generic');
 
   // Pending move waiting for user confirmation
   const pendingMove = useRef<{ from: SlotCoord; to: SlotCoord } | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  // Over-capacity confirm
+  const [overCapacityOpen, setOverCapacityOpen] = useState(false);
+
   // ── Handlers ────────────────────────────────────────────────────────────────
 
-  async function handleGenerate() {
+  async function handleGenerate(forceOverCapacity = false) {
+    const capacity = layout.shelves * layout.slotsPerShelf;
+    const overflow = state.products.length - capacity;
+
+    // If more products than slots, warn first (unless user already confirmed)
+    if (overflow > 0 && !forceOverCapacity) {
+      setOverCapacityOpen(true);
+      return;
+    }
+
     dispatch({ type: 'SET_GENERATING', value: true });
     dispatch({ type: 'SET_ERROR', message: null });
     try {
-      const planogram = buildHardcodedPlanogram(state.products);
-      planogram.layout = { ...planogram.layout, ...layout };
+      const planogram = buildHardcodedPlanogram(state.products, layout);
       dispatch({ type: 'SET_PLANOGRAM', planogram });
     } catch (err) {
       dispatch({ type: 'SET_ERROR', message: String(err) });
@@ -205,6 +262,7 @@ export default function App() {
             onRemove={(id) => dispatch({ type: 'REMOVE_PRODUCT', id })}
           />
           <LayoutConfigurator layout={layout} onChange={setLayout} />
+          <StoreThemePicker value={theme} onChange={setTheme} />
         </aside>
 
         <div className="canvas-area">
@@ -219,11 +277,21 @@ export default function App() {
           <PlanogramCanvas
             planogram={displayPlanogram}
             products={state.products}
+            theme={theme}
             editable={state.planogram !== null}
             onMove={handleMoveRequest}
           />
         </div>
       </main>
+
+      {overCapacityOpen && (
+        <OverCapacityDialog
+          productCount={state.products.length}
+          capacity={layout.shelves * layout.slotsPerShelf}
+          onContinue={() => { setOverCapacityOpen(false); handleGenerate(true); }}
+          onCancel={() => setOverCapacityOpen(false)}
+        />
+      )}
 
       {confirmOpen && pendingMove.current && (
         <ConfirmMoveDialog

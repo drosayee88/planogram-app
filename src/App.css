@@ -352,6 +352,7 @@
   border-radius: 8px;
   padding: 20px;
   overflow-x: auto;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .canvas-label {
@@ -365,8 +366,24 @@
 
 .fixture {
   display: flex;
-  gap: 8px;
+  gap: 0;
   min-width: max-content;
+  background: var(--fixture-bg, #f0f0f0);
+  border: 2px solid var(--fixture-border, #cccccc);
+  border-radius: 4px;
+  padding: 8px 0;
+  position: relative;
+}
+
+/* Left + right uprights */
+.fixture::before,
+.fixture::after {
+  content: '';
+  flex-shrink: 0;
+  width: var(--upright-width, 8px);
+  background: var(--upright-color, #b0b0b0);
+  border-radius: 2px;
+  align-self: stretch;
 }
 
 .shelf-labels {
@@ -393,33 +410,37 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  padding: 0 8px;
 }
 
 .shelf-row {
   display: flex;
   gap: 4px;
-  background: #f7f8fa;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  padding: 6px;
+  background: var(--shelf-bg, #e8e8e8);
+  border: 1px solid var(--shelf-border, #c5c5c5);
+  border-radius: var(--shelf-radius, 3px);
+  /* extra bottom border = shelf lip/edge strip */
+  border-bottom: var(--shelf-edge-height, 5px) solid var(--shelf-edge-color, #a0a0a0);
+  padding: 6px 6px 4px;
   min-height: 80px;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .slot {
   flex: 0 0 90px;
   width: 90px;
   min-height: 68px;
-  border: 1px dashed #d0d7de;
+  border: 1px dashed var(--slot-border, #d0d7de);
   border-radius: 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  padding: 4px;
-  background: #fff;
+  padding: 4px 4px 0;
+  background: var(--slot-bg, #fff);
   overflow: hidden;
-  gap: 2px;
+  gap: 0;
   transition: border-color 0.1s, background 0.1s;
 }
 
@@ -449,14 +470,18 @@
 }
 
 .slot-name {
+  flex-shrink: 0;
+  width: 100%;
   font-size: 9px;
-  color: #57606a;
+  color: var(--label-strip-color, #57606a);
+  background: var(--label-strip-bg, #f7f8fa);
   text-align: center;
-  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  line-height: 1.2;
+  line-height: 1.8;
+  margin-top: 2px;
+  border-top: 1px solid var(--slot-border, #d0d7de);
 }
 
 .slot-empty {
@@ -562,4 +587,162 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+/* ── Store theme picker ──────────────────────────────────────────────────── */
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.theme-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 4px 7px;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 11px;
+  color: #57606a;
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+}
+.theme-btn:hover {
+  border-color: var(--brand);
+  background: #f6f8fa;
+}
+.theme-btn--active {
+  border-color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 8%, #fff);
+  color: #1f2328;
+  font-weight: 600;
+}
+
+.theme-swatch {
+  display: block;
+  width: 28px;
+  height: 18px;
+  border-radius: 3px;
+  background: var(--brand);
+}
+
+.theme-label {
+  line-height: 1.2;
+  text-align: center;
+}
+
+.theme-check {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  font-size: 10px;
+  color: var(--brand);
+  font-weight: 700;
+}
+
+/* ── Shelf theme CSS variables (defaults = generic) ─────────────────────── */
+/*
+  All shelf visual tokens are CSS variables so every [data-theme] override
+  only has to change the values it cares about.
+*/
+.canvas-wrap {
+  /* fixture shell */
+  --fixture-bg:        #f0f0f0;
+  --fixture-border:    #cccccc;
+
+  /* upright / side post */
+  --upright-color:     #b0b0b0;
+  --upright-width:     8px;
+
+  /* shelf row */
+  --shelf-bg:          #e8e8e8;
+  --shelf-border:      #c5c5c5;
+  --shelf-edge-color:  #a0a0a0;  /* bottom edge strip simulating shelf lip */
+  --shelf-edge-height: 5px;
+  --shelf-radius:      3px;
+
+  /* product slot */
+  --slot-bg:           #ffffff;
+  --slot-border:       #d0d7de;
+
+  /* slot label strip */
+  --label-strip-bg:    #f7f8fa;
+  --label-strip-color: #57606a;
+}
+
+/* ── Generic (neutral grey gondola) ─────────────────────────────────────── */
+/* already covered by defaults above */
+
+/* ── Walmart (blue/yellow gondola) ──────────────────────────────────────── */
+.canvas-wrap[data-theme="walmart"] {
+  --fixture-bg:       #e8f0fa;
+  --fixture-border:   #0071ce;
+  --upright-color:    #0071ce;
+  --shelf-bg:         linear-gradient(to bottom, #d8e8f8 0%, #c8d8f0 80%, #ffc220 80%, #ffc220 100%);
+  --shelf-border:     #0071ce;
+  --shelf-edge-color: #ffc220;
+  --slot-bg:          #f5faff;
+  --slot-border:      #7db8e8;
+  --label-strip-bg:   #e8f0fa;
+  --label-strip-color:#0071ce;
+}
+
+/* ── Target (red/white bullseye gondola) ─────────────────────────────────── */
+.canvas-wrap[data-theme="target"] {
+  --fixture-bg:       #fff0f0;
+  --fixture-border:   #cc0000;
+  --upright-color:    #cc0000;
+  --shelf-bg:         linear-gradient(to bottom, #fff5f5 0%, #ffe8e8 80%, #cc0000 80%, #cc0000 100%);
+  --shelf-border:     #cc0000;
+  --shelf-edge-color: #cc0000;
+  --slot-bg:          #fffafa;
+  --slot-border:      #f0a0a0;
+  --label-strip-bg:   #fff0f0;
+  --label-strip-color:#cc0000;
+}
+
+/* ── Costco (blue/red warehouse racking) ────────────────────────────────── */
+.canvas-wrap[data-theme="costco"] {
+  --fixture-bg:       #e6edf5;
+  --fixture-border:   #005daa;
+  --upright-color:    #c8363c;
+  --shelf-bg:         linear-gradient(to bottom, #dce8f5 0%, #c8d8ec 85%, #c8363c 85%, #c8363c 100%);
+  --shelf-border:     #005daa;
+  --shelf-edge-color: #c8363c;
+  --slot-bg:          #f4f8fc;
+  --slot-border:      #88aacc;
+  --label-strip-bg:   #e6edf5;
+  --label-strip-color:#005daa;
+}
+
+/* ── Home Depot (orange/black power racking) ────────────────────────────── */
+.canvas-wrap[data-theme="homedepot"] {
+  --fixture-bg:       #1a1a1a;
+  --fixture-border:   #f96302;
+  --upright-color:    #f96302;
+  --shelf-bg:         linear-gradient(to bottom, #2a2a2a 0%, #1e1e1e 80%, #f96302 80%, #f96302 100%);
+  --shelf-border:     #f96302;
+  --shelf-edge-color: #f96302;
+  --slot-bg:          #2e2e2e;
+  --slot-border:      #555555;
+  --label-strip-bg:   #1a1a1a;
+  --label-strip-color:#f96302;
+}
+
+/* ── Walgreens (red/white pharmacy shelving) ────────────────────────────── */
+.canvas-wrap[data-theme="walgreens"] {
+  --fixture-bg:       #fafafa;
+  --fixture-border:   #e0151f;
+  --upright-color:    #e0151f;
+  --shelf-bg:         linear-gradient(to bottom, #ffffff 0%, #f5f5f5 80%, #e0151f 80%, #e0151f 100%);
+  --shelf-border:     #e0151f;
+  --shelf-edge-color: #e0151f;
+  --slot-bg:          #ffffff;
+  --slot-border:      #f0a0a0;
+  --label-strip-bg:   #fff5f5;
+  --label-strip-color:#e0151f;
 }

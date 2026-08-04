@@ -1,31 +1,25 @@
-import type { Planogram, Product } from '../types/planogram';
+import type { Planogram, Product, ShelfLayout } from '../types/planogram';
 
 /**
- * Generates a hardcoded planogram from the supplied products.
- * Products are placed left-to-right, top-to-bottom across a 4-shelf fixture
- * with 6 slots per shelf.  Each product occupies 1 facing.
+ * Generates a planogram from the supplied products using the given layout.
+ * Products are placed left-to-right, top-to-bottom.
+ * Excess products (beyond shelves × slotsPerShelf) are silently dropped —
+ * the caller is responsible for warning the user before calling this.
  *
  * Phase 2: replace this with a call to llmService.generatePlanogram().
  */
-export function buildHardcodedPlanogram(products: Product[]): Planogram {
-  const SHELVES = 4;
-  const SLOTS = 6;
+export function buildHardcodedPlanogram(products: Product[], layout: ShelfLayout): Planogram {
+  const { shelves, slotsPerShelf } = layout;
+  const capacity = shelves * slotsPerShelf;
 
-  const placements = products.slice(0, SHELVES * SLOTS).map((p, i) => ({
+  const placements = products.slice(0, capacity).map((p, i) => ({
     productId: p.id,
-    shelf: Math.floor(i / SLOTS),
-    slot: i % SLOTS,
+    shelf: Math.floor(i / slotsPerShelf),
+    slot: i % slotsPerShelf,
     facings: 1,
   }));
 
-  return {
-    layout: {
-      shelves: SHELVES,
-      slotsPerShelf: SLOTS,
-      label: 'Main Floor Fixture',
-    },
-    placements,
-  };
+  return { layout, placements };
 }
 
 /**

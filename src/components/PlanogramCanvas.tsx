@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import type { Planogram, Product } from '../types/planogram';
+import type { Planogram, Product, StoreThemeId } from '../types/planogram';
 
 interface SlotCoord { shelf: number; slot: number }
 
 interface Props {
   planogram: Planogram;
   products: Product[];
+  theme?: StoreThemeId;
   /** When false the grid is read-only (no planogram generated yet) */
   editable?: boolean;
   onMove?: (from: SlotCoord, to: SlotCoord) => void;
@@ -15,7 +16,7 @@ interface Props {
 // even if the dragend/drop event order varies between browsers.
 const DND_KEY = 'application/x-planogram-slot';
 
-export function PlanogramCanvas({ planogram, products, editable = false, onMove }: Props) {
+export function PlanogramCanvas({ planogram, products, theme = 'generic', editable = false, onMove }: Props) {
   const { layout, placements } = planogram;
   const productMap = new Map(products.map((p) => [p.id, p]));
 
@@ -79,7 +80,7 @@ export function PlanogramCanvas({ planogram, products, editable = false, onMove 
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="canvas-wrap">
+    <div className="canvas-wrap" data-theme={theme}>
       {layout.label && <p className="canvas-label">{layout.label}</p>}
 
       {editable && (
