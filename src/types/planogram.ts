@@ -1,3 +1,7 @@
+// ─── Fixture type ─────────────────────────────────────────────────────────────
+
+export type FixtureType = 'standard' | 'endcap';
+
 // ─── Store themes ─────────────────────────────────────────────────────────────
 
 export type StoreThemeId =

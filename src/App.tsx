@@ -1,5 +1,5 @@
 import { useReducer, useState, useRef } from 'react';
-import type { PlanogramAction, PlanogramState, Planogram, ShelfLayout, StoreThemeId } from './types/planogram';
+import type { FixtureType, PlanogramAction, PlanogramState, Planogram, ShelfLayout, StoreThemeId } from './types/planogram';
 import { buildEmptyPlanogram, buildHardcodedPlanogram } from './services/planogramService';
 import { exportToPptx } from './services/exportService';
 import { ProductUploader } from './components/ProductUploader';
@@ -167,6 +167,7 @@ export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [layout, setLayout] = useState<ShelfLayout>(DEFAULT_LAYOUT);
   const [theme, setTheme] = useState<StoreThemeId>('generic');
+  const [fixtureType, setFixtureType] = useState<FixtureType>('standard');
 
   // Pending move waiting for user confirmation
   const pendingMove = useRef<{ from: SlotCoord; to: SlotCoord } | null>(null);
@@ -202,7 +203,7 @@ export default function App() {
   async function handleExport() {
     if (!state.planogram) return;
     try {
-      await exportToPptx(state.planogram, state.products, layout.label ?? 'Planogram');
+      await exportToPptx(state.planogram, state.products, layout.label ?? 'Planogram', theme);
     } catch (err) {
       dispatch({ type: 'SET_ERROR', message: `Export failed: ${String(err)}` });
     }
@@ -261,7 +262,12 @@ export default function App() {
             onAdd={(products) => dispatch({ type: 'ADD_PRODUCTS', products })}
             onRemove={(id) => dispatch({ type: 'REMOVE_PRODUCT', id })}
           />
-          <LayoutConfigurator layout={layout} onChange={setLayout} />
+          <LayoutConfigurator
+            layout={layout}
+            fixtureType={fixtureType}
+            onChange={setLayout}
+            onFixtureTypeChange={setFixtureType}
+          />
           <StoreThemePicker value={theme} onChange={setTheme} />
         </aside>
 
@@ -278,6 +284,7 @@ export default function App() {
             planogram={displayPlanogram}
             products={state.products}
             theme={theme}
+            fixtureType={fixtureType}
             editable={state.planogram !== null}
             onMove={handleMoveRequest}
           />

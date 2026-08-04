@@ -308,6 +308,19 @@
   box-shadow: 0 0 0 2px rgba(59,130,212,0.2);
 }
 
+.config-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  background: var(--brand, #3b82d4);
+  color: #fff;
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
 .config-summary {
   margin-top: 10px;
   font-size: 12px;
@@ -316,6 +329,58 @@
   background: #f6f8fa;
   border-radius: 4px;
   border: 1px solid #e5e7eb;
+}
+
+/* ── Fixture type toggle ──────────────────────────────────────────────────── */
+.fixture-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.fixture-toggle-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px 8px;
+  border: 2px solid #e5e7eb;
+  border-radius: 7px;
+  background: #fff;
+  cursor: pointer;
+  color: #57606a;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.fixture-toggle-btn:hover {
+  border-color: #3b82d4;
+  color: #1f2328;
+}
+.fixture-toggle-btn--active {
+  border-color: #3b82d4;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.fixture-toggle-icon {
+  display: block;
+  line-height: 0;
+  color: currentColor;
+}
+
+.fixture-toggle-label {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.fixture-toggle-desc {
+  font-size: 10px;
+  color: #57606a;
+  line-height: 1.2;
+}
+.fixture-toggle-btn--active .fixture-toggle-desc {
+  color: #3b82d4;
 }
 
 /* ── Canvas area ─────────────────────────────────────────────────────────── */
@@ -745,4 +810,125 @@
   --slot-border:      #f0a0a0;
   --label-strip-bg:   #fff5f5;
   --label-strip-color:#e0151f;
+}
+
+/* ── Endcap 3-D scene ────────────────────────────────────────────────────── */
+
+/*
+  Layout:
+    .endcap-top-fascia   — header sign strip above the shelves
+    .endcap-scene        — perspective container (side panels + fixture)
+      .endcap-side-panel — left / right cheek panels (skewed to look 3-D)
+      .fixture           — the normal shelf grid, untouched
+    .endcap-base         — floor riser / toe-kick below the shelves
+
+  The 3-D effect is achieved with CSS perspective on the scene and
+  skewY on the side panels — no transform on the shelf grid itself
+  so drag-and-drop hit-testing stays accurate.
+*/
+
+/* When the canvas is in endcap mode, shrink the canvas padding slightly
+   and cap width so the endcap reads as a compact freestanding unit */
+.canvas-wrap[data-fixture="endcap"] {
+  max-width: 560px;
+}
+
+/* ── Top fascia (header sign) ─────────────────────────────────────────────── */
+.endcap-top-fascia {
+  height: 28px;
+  background: var(--upright-color, #b0b0b0);
+  border-radius: 4px 4px 0 0;
+  margin-bottom: 0;
+  position: relative;
+  /* Slight depth strip on the top edge */
+}
+.endcap-top-fascia::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.18) 0%, transparent 100%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* ── Scene wrapper — perspective container ──────────────────────────────── */
+.endcap-scene {
+  display: flex;
+  align-items: stretch;
+  perspective: 900px;
+}
+
+/* ── Side panels (the "cheeks" of the endcap) ─────────────────────────────── */
+.endcap-side-panel {
+  width: 22px;
+  flex-shrink: 0;
+  background: var(--upright-color, #b0b0b0);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Gradient overlay to simulate lighting on side face */
+.endcap-side-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.endcap-side-panel--left {
+  border-radius: 3px 0 0 3px;
+  background: color-mix(in srgb, var(--upright-color, #b0b0b0) 70%, #000 30%);
+}
+.endcap-side-panel--left::after {
+  background: linear-gradient(to right, rgba(0,0,0,0.15), transparent);
+}
+
+.endcap-side-panel--right {
+  border-radius: 0 3px 3px 0;
+  /* Lighter face — catches "light" from the right */
+  background: color-mix(in srgb, var(--upright-color, #b0b0b0) 75%, #fff 25%);
+}
+.endcap-side-panel--right::after {
+  background: linear-gradient(to left, rgba(255,255,255,0.12), transparent);
+}
+
+/* Shelf-edge lines on side panels — thin horizontal rules every ~88px */
+.endcap-side-panel--left::before,
+.endcap-side-panel--right::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 85px,
+    rgba(0,0,0,0.18) 85px,
+    rgba(0,0,0,0.18) 89px
+  );
+}
+
+/* Inside the endcap scene the fixture has no outer border/radius — the panels
+   serve as the visual frame */
+.endcap-scene .fixture {
+  border-radius: 0;
+  flex: 1;
+  border-left: none;
+  border-right: none;
+}
+
+/* ── Base riser (toe-kick) ────────────────────────────────────────────────── */
+.endcap-base {
+  height: 14px;
+  background: color-mix(in srgb, var(--upright-color, #b0b0b0) 60%, #000 40%);
+  border-radius: 0 0 4px 4px;
+  position: relative;
+}
+.endcap-base::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.25));
+  border-radius: inherit;
+  pointer-events: none;
 }

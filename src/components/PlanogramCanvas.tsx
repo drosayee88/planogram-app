@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Planogram, Product, StoreThemeId } from '../types/planogram';
+import type { FixtureType, Planogram, Product, StoreThemeId } from '../types/planogram';
 
 interface SlotCoord { shelf: number; slot: number }
 
@@ -7,6 +7,7 @@ interface Props {
   planogram: Planogram;
   products: Product[];
   theme?: StoreThemeId;
+  fixtureType?: FixtureType;
   /** When false the grid is read-only (no planogram generated yet) */
   editable?: boolean;
   onMove?: (from: SlotCoord, to: SlotCoord) => void;
@@ -16,7 +17,7 @@ interface Props {
 // even if the dragend/drop event order varies between browsers.
 const DND_KEY = 'application/x-planogram-slot';
 
-export function PlanogramCanvas({ planogram, products, theme = 'generic', editable = false, onMove }: Props) {
+export function PlanogramCanvas({ planogram, products, theme = 'generic', fixtureType = 'standard', editable = false, onMove }: Props) {
   const { layout, placements } = planogram;
   const productMap = new Map(products.map((p) => [p.id, p]));
 
@@ -79,8 +80,10 @@ export function PlanogramCanvas({ planogram, products, theme = 'generic', editab
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
+  const isEndcap = fixtureType === 'endcap';
+
   return (
-    <div className="canvas-wrap" data-theme={theme}>
+    <div className="canvas-wrap" data-theme={theme} data-fixture={fixtureType}>
       {layout.label && <p className="canvas-label">{layout.label}</p>}
 
       {editable && (
@@ -89,20 +92,26 @@ export function PlanogramCanvas({ planogram, products, theme = 'generic', editab
         </p>
       )}
 
-      <div className="fixture">
-        {/* Row labels */}
-        <div className="shelf-labels">
-          {Array.from({ length: layout.shelves }, (_, i) => (
-            <div key={i} className="shelf-row-label">
-              S{i + 1}
-            </div>
-          ))}
-        </div>
+      {/* ── Endcap outer chrome ── */}
+      {isEndcap && <div className="endcap-top-fascia" />}
 
-        {/* Shelves */}
-        <div className="shelves">
-          {Array.from({ length: layout.shelves }, (_, rowIdx) => (
-            <div key={rowIdx} className="shelf-row">
+      <div className={isEndcap ? 'endcap-scene' : ''}>
+        {isEndcap && <div className="endcap-side-panel endcap-side-panel--left" />}
+
+        <div className="fixture">
+          {/* Row labels */}
+          <div className="shelf-labels">
+            {Array.from({ length: layout.shelves }, (_, i) => (
+              <div key={i} className="shelf-row-label">
+                S{i + 1}
+              </div>
+            ))}
+          </div>
+
+          {/* Shelves */}
+          <div className="shelves">
+            {Array.from({ length: layout.shelves }, (_, rowIdx) => (
+              <div key={rowIdx} className="shelf-row">
               {Array.from({ length: layout.slotsPerShelf }, (_, colIdx) => {
                 const coord: SlotCoord = { shelf: rowIdx, slot: colIdx };
                 const key = `${rowIdx}-${colIdx}`;
@@ -147,10 +156,15 @@ export function PlanogramCanvas({ planogram, products, theme = 'generic', editab
                   </div>
                 );
               })}
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
+
+        {isEndcap && <div className="endcap-side-panel endcap-side-panel--right" />}
       </div>
+
+      {isEndcap && <div className="endcap-base" />}
 
       {/* Legend */}
       <div className="canvas-legend">
